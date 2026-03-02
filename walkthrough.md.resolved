@@ -1,0 +1,53 @@
+# Production Microservice Upgrade — Walkthrough
+
+## What Changed
+
+Transformed the Pickup AI engine into a production-ready microservice with PostgreSQL persistence.
+
+### New / Modified Files
+
+| File | Change |
+|------|--------|
+| [database.py](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/core/database.py) | **NEW** — SQLAlchemy engine, session, [get_db()](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/core/database.py#31-41) dependency, [init_db()](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/core/database.py#43-48), [check_db_connection()](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/core/database.py#50-58) |
+| [model/prediction.py](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/model/prediction.py) | **NEW** — `predictions` table model (match_id unique, confidence, market, prediction_value, reasoning, value_edge, implied_probability, created_at) |
+| [config.py](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/core/config.py) | Added `DATABASE_URL` and `PORT` |
+| [predictions.py](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/api/routes/predictions.py) | DB session injection + upsert after [predict()](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/services/ai_predictor.py#71-125) call |
+| [main.py](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/app/main.py) | Lifespan for auto table creation + enhanced `/health` with DB status |
+| [README.md](file:///c:/Users/Tashin%20Mahmud%20Khan/Desktop/Tashin%20Mahmud%20Khan/Projects/pickup_ai/README.md) | Full curl examples, DB schema reference |
+
+## Verification Results
+
+```
+✅ Health check: {"status": "ok", "database": "connected", "version": "0.2.0"}
+✅ DB save: Row inserted with id=1 to Neon PostgreSQL  
+✅ DB query: 1 row found in predictions table
+✅ Table auto-creation on startup: No errors
+⚠️ /predict 500: OpenAI returned 429 (insufficient_quota) — API key issue, not code
+```
+
+## How It Works
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant FastAPI
+    participant OpenAI
+    participant PostgreSQL
+
+    Client->>FastAPI: POST /api/predict (MatchBundle)
+    FastAPI->>OpenAI: GPT-4o mini (Structured Output)
+    OpenAI-->>FastAPI: PredictionResponse JSON
+    FastAPI->>PostgreSQL: Upsert prediction row
+    PostgreSQL-->>FastAPI: Saved (match_id unique)
+    FastAPI-->>Client: Return JSON response
+```
+
+## Next Step
+
+Your OpenAI API key has hit its quota limit. Once refreshed or topped up, run:
+
+```bash
+python -m uvicorn app.main:app --port 8000
+# Then test with:
+python test_api.py
+```

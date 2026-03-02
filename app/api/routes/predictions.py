@@ -2,12 +2,15 @@
 Pickup AI — Prediction API Routes
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from app.schemas.prediction import PredictionResponse
 from app.services.ai_predictor import predict
+from app.core.database import get_db
+from app.model.prediction import Prediction
 
 router = APIRouter(prefix="/api", tags=["predictions"])
 
@@ -27,19 +30,79 @@ class MatchBundle(BaseModel):
     odds: Optional[dict] = None
 
 
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+
+def _generate_match_id(match_info: dict) -> str:
+    """Generate a unique match_id from match_info fields."""
+    home = match_info.get("home", "unknown").replace(" ", "_")
+    away = match_info.get("away", "unknown").replace(" ", "_")
+    date = match_info.get("date", "unknown")
+    return f"{home}_vs_{away}_{date}"
+
+
+def _save_prediction(
+    db: Session,
+    match_id: str,
+    result: PredictionResponse,
+) -> Prediction:
+    """
+    Save or update a prediction in the database.
+    Uses upsert logic — if match_id exists, update the row.
+    """
+    existing = db.query(Prediction).filter(Prediction.match_id == match_id).first()
+
+    if existing:
+        existing.confidence = result.confidence
+        existing.market = result.market
+        existing.prediction_value = result.prediction
+        existing.reasoning = result.reasoning
+        existing.value_edge = result.value_edge
+        existing.implied_probability = result.implied_probability
+        db.commit()
+        db.refresh(existing)
+        return existing
+    else:
+        db_prediction = Prediction(
+            match_id=match_id,
+            confidence=result.confidence,
+            market=result.market,
+            prediction_value=result.prediction,
+            reasoning=result.reasoning,
+            value_edge=result.value_edge,
+            implied_probability=result.implied_probability,
+        )
+        db.add(db_prediction)
+        db.commit()
+        db.refresh(db_prediction)
+        return db_prediction
+
+
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
 
 @router.post("/predict", response_model=PredictionResponse)
-async def predict_match(bundle: MatchBundle):
+async def predict_match(bundle: MatchBundle, db: Session = Depends(get_db)):
     """
-    Accept a match bundle and return an AI-generated prediction.
+    Accept a match bundle, generate an AI prediction, save it to the
+    database, and return the JSON response.
 
-    The AI analyzes the home/away context, H2H record, and news
-    to find the highest-value betting market prediction.
+    The prediction will automatically appear in the Postgres
+    `predictions` table with a unique match_id.
     """
     try:
         result = predict(bundle.model_dump())
-        return result
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    # Save to database
+    try:
+        match_id = _generate_match_id(bundle.match_info)
+        _save_prediction(db, match_id, result)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Prediction generated but failed to save to database: {e}",
+        )
+
+    return result

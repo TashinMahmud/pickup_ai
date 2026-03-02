@@ -1,13 +1,18 @@
 """
 Pickup AI — AI Predictor Service
-Uses OpenAI GPT-4o mini with Structured Outputs to generate predictions.
+Multi-provider prediction engine using LiteLLM.
+Supports OpenAI, Gemini, and Anthropic via a single interface.
 """
 
 import json
-from openai import OpenAI, OpenAIError
+import os
+import litellm
 
 from app.core.config import get_settings
 from app.schemas.prediction import PredictionResponse
+
+# Suppress LiteLLM's verbose logging
+litellm.suppress_debug_info = True
 
 
 # ── Enhanced System Prompt ─────────────────────────────────────────────────────
@@ -65,41 +70,57 @@ Confidence Calibration:
 
 Edge-Case Rule: If no clear value exists, set confidence below 50 and explain why. Never force a high-confidence pick when the data doesn't support it.
 
-Constraint: You must ONLY output JSON matching the required schema. Do not include any conversational filler."""
+You must respond with valid JSON matching the required schema. Fields: confidence (int 1-100), market (str), prediction (str), reasoning (str, max 120 chars), implied_probability (float or null), value_edge (str or null)."""
+
+
+def _set_provider_env(settings) -> None:
+    """
+    Set the appropriate environment variable for the active provider.
+    LiteLLM reads API keys from env vars by convention.
+    """
+    provider = settings.MODEL_PROVIDER.lower()
+
+    if provider == "openai" and settings.OPENAI_API_KEY:
+        os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
+    elif provider == "gemini" and settings.GEMINI_API_KEY:
+        os.environ["GEMINI_API_KEY"] = settings.GEMINI_API_KEY
 
 
 def predict(bundle: dict) -> PredictionResponse:
     """
-    Send a match bundle to GPT-4o mini and return a structured prediction.
+    Send a match bundle to the configured LLM provider and return
+    a structured prediction.
+
+    Uses LiteLLM to call OpenAI, Gemini, or Anthropic with a single
+    interface. The provider is determined by MODEL_PROVIDER in .env.
 
     Args:
-        bundle: A dictionary containing match_info, home_team_context,
-                away_team_context, h2h_context, and optionally news_context,
-                league_context, and odds.
+        bundle: Match bundle dict (match_info, home/away context, etc.)
 
     Returns:
-        PredictionResponse: Structured prediction with confidence, market,
-                           prediction, reasoning, implied_probability, and value_edge.
+        PredictionResponse: Structured prediction (identical JSON
+                           regardless of provider).
 
     Raises:
-        RuntimeError: If the API call fails or returns an unparseable response.
+        RuntimeError: Normalized error — same format for all providers.
     """
     settings = get_settings()
 
-    if not settings.OPENAI_API_KEY:
-        raise RuntimeError(
-            "❌ OPENAI_API_KEY is not set. "
-            "Add it to your .env file: OPENAI_API_KEY=sk-your-key-here"
-        )
+    # Validate API key is present
+    api_key = settings.get_active_api_key()  # Raises RuntimeError if missing
 
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    # Set env vars for LiteLLM
+    _set_provider_env(settings)
+
+    # Resolve model string (handles provider prefixes)
+    model = settings.get_litellm_model()
 
     user_message = json.dumps(bundle, indent=2)
 
     try:
-        completion = client.beta.chat.completions.parse(
-            model=settings.OPENAI_MODEL,
-            temperature=settings.OPENAI_TEMPERATURE,
+        response = litellm.completion(
+            model=model,
+            temperature=settings.MODEL_TEMPERATURE,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_message},
@@ -107,18 +128,49 @@ def predict(bundle: dict) -> PredictionResponse:
             response_format=PredictionResponse,
         )
 
-        result = completion.choices[0].message.parsed
+        content = response.choices[0].message.content
 
-        if result is None:
+        if not content:
             raise RuntimeError(
-                "⚠️ The model returned a response that could not be parsed "
-                "into the PredictionResponse schema. This may indicate a "
-                "refusal or malformed output."
+                "⚠️ The model returned an empty response. "
+                "This may indicate a content filter or refusal."
             )
 
+        # Parse the JSON response into PredictionResponse
+        result = PredictionResponse.model_validate_json(content)
         return result
 
-    except OpenAIError as e:
-        raise RuntimeError(f"❌ OpenAI API error: {e}") from e
+    except litellm.AuthenticationError as e:
+        raise RuntimeError(
+            f"❌ Authentication failed for provider '{settings.MODEL_PROVIDER}'. "
+            f"Check your API key. Details: {e}"
+        ) from e
+    except litellm.RateLimitError as e:
+        raise RuntimeError(
+            f"❌ Rate limit reached for provider '{settings.MODEL_PROVIDER}'. "
+            f"Wait and retry, or switch providers. Details: {e}"
+        ) from e
+    except litellm.BadRequestError as e:
+        raise RuntimeError(
+            f"❌ Bad request to provider '{settings.MODEL_PROVIDER}'. "
+            f"The model may not support structured output. Details: {e}"
+        ) from e
+    except litellm.APIConnectionError as e:
+        raise RuntimeError(
+            f"❌ Cannot reach provider '{settings.MODEL_PROVIDER}'. "
+            f"Check your network connection. Details: {e}"
+        ) from e
+    except litellm.APIError as e:
+        raise RuntimeError(
+            f"❌ API error from provider '{settings.MODEL_PROVIDER}': {e}"
+        ) from e
+    except json.JSONDecodeError as e:
+        raise RuntimeError(
+            f"❌ Provider '{settings.MODEL_PROVIDER}' returned invalid JSON. "
+            f"Try switching to a model with better structured output support. "
+            f"Details: {e}"
+        ) from e
     except Exception as e:
-        raise RuntimeError(f"❌ Unexpected error during prediction: {e}") from e
+        raise RuntimeError(
+            f"❌ Unexpected error (provider: {settings.MODEL_PROVIDER}): {e}"
+        ) from e
