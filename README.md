@@ -138,21 +138,11 @@ pickup_ai/
 │   ├── core/
 │   │   ├── config.py               # Environment config
 │   │   └── database.py             # SQLAlchemy engine + session
-│   ├── data/data_simulator.py      # Test match bundle generator
 │   ├── model/prediction.py         # SQLAlchemy predictions model
 │   ├── schemas/prediction.py       # Pydantic response schema
-│   ├── services/ai_predictor.py    # GPT-4o mini predictor
+│   ├── services/ai_predictor.py    # Multi-Sport AI Quant
 │   └── main.py                     # FastAPI app entry
-├── test_engine.py                  # CLI test runner
 ├── requirements.txt
 ├── .env.example
 └── README.md
-```
-
-## CLI Test Runner
-
-Run predictions directly from the terminal (does not save to DB):
-
-```bash
-python test_engine.py
 ```
