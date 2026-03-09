@@ -21,6 +21,7 @@ router = APIRouter(prefix="/api", tags=["predictions"])
 class MatchBundle(BaseModel):
     """Request body for the /predict endpoint."""
 
+    sport: str = "football"
     match_info: dict
     home_team_context: dict
     away_team_context: dict
@@ -33,12 +34,14 @@ class MatchBundle(BaseModel):
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 
-def _generate_match_id(match_info: dict) -> str:
+def _generate_match_id(sport: str, match_info: dict) -> str:
     """Generate a unique match_id from match_info fields."""
-    home = match_info.get("home", "unknown").replace(" ", "_")
-    away = match_info.get("away", "unknown").replace(" ", "_")
+    home = match_info.get("home") or match_info.get("player_1", "unknown")
+    home = home.replace(" ", "_").lower()
+    away = match_info.get("away") or match_info.get("player_2", "unknown")
+    away = away.replace(" ", "_").lower()
     date = match_info.get("date", "unknown")
-    return f"{home}_vs_{away}_{date}"
+    return f"{sport}_{home}_vs_{away}_{date}"
 
 
 def _save_prediction(
@@ -97,7 +100,7 @@ async def predict_match(bundle: MatchBundle, db: Session = Depends(get_db)):
 
     # Save to database
     try:
-        match_id = _generate_match_id(bundle.match_info)
+        match_id = _generate_match_id(bundle.sport, bundle.match_info)
         _save_prediction(db, match_id, result)
     except Exception as e:
         raise HTTPException(

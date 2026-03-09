@@ -24,20 +24,20 @@ RESET = "\033[0m"
 
 # ── Bundle Labels ──────────────────────────────────────────────────────────────
 
-BUNDLE_LABELS = [
-    "🏟️  Top-Table Clash",
-    "⚔️  Relegation Battle",
-    "⚽  Mid-Table Game",
-]
-
+BUNDLE_LABELS = {
+    "football": "⚽ Football",
+    "basketball": "🏀 Basketball",
+    "tennis": "🎾 Tennis",
+}
 
 def print_separator():
     print(f"{DIM}{'━' * 60}{RESET}")
 
 
-def print_bundle_header(label: str, match_info: dict, league_context: dict = None):
-    home = match_info["home"]
-    away = match_info["away"]
+def print_bundle_header(sport: str, match_info: dict, league_context: dict = None):
+    label = BUNDLE_LABELS.get(sport, sport.capitalize())
+    home = match_info.get("home") or match_info.get("player_1", "Unknown")
+    away = match_info.get("away") or match_info.get("player_2", "Unknown")
     date = match_info["date"]
     print()
     print_separator()
@@ -45,20 +45,14 @@ def print_bundle_header(label: str, match_info: dict, league_context: dict = Non
     print(f"{DIM}  📅 {date}{RESET}")
     if league_context:
         league = league_context.get("league", "Unknown")
-        avg_goals = league_context.get("avg_goals_per_game", "N/A")
-        print(f"{DIM}  🏆 {league}  |  League avg: {avg_goals} goals/game{RESET}")
+        print(f"{DIM}  🏆 {league}{RESET}")
     print_separator()
 
 
 def print_odds(odds: dict):
-    """Print the bookmaker odds for this match."""
-    print(f"  {DIM}📊 Odds: "
-          f"H {odds.get('home_win', '-')} | "
-          f"D {odds.get('draw', '-')} | "
-          f"A {odds.get('away_win', '-')} | "
-          f"O2.5 {odds.get('over_2_5', '-')} | "
-          f"U2.5 {odds.get('under_2_5', '-')} | "
-          f"BTTS {odds.get('btts_yes', '-')}{RESET}")
+    """Print the configured bookmaker odds."""
+    odds_str = " | ".join([f"{k} {v}" for k, v in odds.items()])
+    print(f"  {DIM}📊 Odds: {odds_str}{RESET}")
 
 
 def print_prediction(prediction):
@@ -98,16 +92,16 @@ def main():
     bundles = get_match_bundles()
 
     print()
-    print(f"{BOLD}{CYAN}╔══════════════════════════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}{CYAN}║          🏈  PICKUP AI — PREDICTION ENGINE  🏈          ║{RESET}")
-    print(f"{BOLD}{CYAN}╚══════════════════════════════════════════════════════════╝{RESET}")
+    print(f"{BOLD}{CYAN}+----------------------------------------------------------+{RESET}")
+    print(f"{BOLD}{CYAN}|          🏈  PICKUP AI — PREDICTION ENGINE  🏈          |{RESET}")
+    print(f"{BOLD}{CYAN}+----------------------------------------------------------+{RESET}")
     print()
 
-    for i, bundle in enumerate(bundles):
-        label = BUNDLE_LABELS[i] if i < len(BUNDLE_LABELS) else f"Bundle {i + 1}"
+    for bundle in bundles:
+        sport = bundle.get("sport", "football")
 
         print_bundle_header(
-            label,
+            sport,
             bundle["match_info"],
             bundle.get("league_context"),
         )

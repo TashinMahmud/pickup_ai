@@ -15,8 +15,9 @@ def get_match_bundles() -> list[dict]:
     """
 
     bundles = [
-        # ── Bundle 1: Top-Table Clash ──────────────────────────────────
+        # ── Bundle 1: Football (Top-Table Clash) ───────────────────────
         {
+            "sport": "football",
             "match_info": {
                 "home": "Arsenal",
                 "away": "Man City",
@@ -62,100 +63,109 @@ def get_match_bundles() -> list[dict]:
                 "conference. Saka is fully fit and expected to start."
             ),
         },
-        # ── Bundle 2: Relegation Battle ────────────────────────────────
+        # ── Bundle 2: Basketball (Western Conference) ──────────────────
         {
+            "sport": "basketball",
             "match_info": {
-                "home": "Burnley",
-                "away": "Sheffield United",
-                "date": "2026-03-01",
-            },
-            "league_context": {
-                "league": "Premier League",
-                "season": "2025-26",
-                "avg_goals_per_game": 2.77,
-                "home_win_rate": 0.46,
-                "draw_rate": 0.24,
-                "away_win_rate": 0.30,
-            },
-            "home_team_context": {
-                "form": "L-D-L-L-W",
-                "avg_goals": 0.8,
-                "injuries": ["Rodriguez (Doubtful)", "Cork (Out)"],
-                "home_record": "W2-D4-L5 at Turf Moor this season",
-                "xG_per_game": 0.9,
-            },
-            "away_team_context": {
-                "form": "L-L-D-L-L",
-                "avg_goals": 0.5,
-                "injuries": ["Brewster (Out)", "McBurnie (Doubtful)"],
-                "away_record": "W1-D2-L8 on the road this season",
-                "xG_per_game": 0.6,
-            },
-            "odds": {
-                "home_win": 2.25,
-                "draw": 3.10,
-                "away_win": 3.50,
-                "over_2_5": 3.20,
-                "under_2_5": 1.36,
-                "btts_yes": 2.80,
-                "btts_no": 1.45,
-            },
-            "h2h_context": (
-                "Last 4 meetings have produced only 3 total goals. "
-                "Burnley won the reverse fixture 1-0 with a late set-piece goal."
-            ),
-            "news_context": (
-                "Sheffield United manager confirmed they will prioritize "
-                "defensive solidity. Burnley's new signing Benson is available."
-            ),
-        },
-        # ── Bundle 3: Mid-Table Game ───────────────────────────────────
-        {
-            "match_info": {
-                "home": "Wolves",
-                "away": "Bournemouth",
+                "home": "Lakers",
+                "away": "Nuggets",
                 "date": "2026-03-02",
             },
             "league_context": {
-                "league": "Premier League",
+                "league": "NBA",
                 "season": "2025-26",
-                "avg_goals_per_game": 2.77,
-                "home_win_rate": 0.46,
-                "draw_rate": 0.24,
-                "away_win_rate": 0.30,
+                "avg_points_per_game": 228.5,
+                "home_win_rate": 0.58,
             },
             "home_team_context": {
-                "form": "W-L-W-D-D",
-                "avg_goals": 1.3,
-                "injuries": ["Kalajdzic (Out)"],
-                "home_record": "W4-D3-L4 at Molineux this season",
-                "xG_per_game": 1.4,
+                "form": "W-L-W-W-L",
+                "avg_points_scored": 114.2,
+                "avg_points_allowed": 112.5,
+                "injuries": ["Davis (Probable)"],
+                "home_record": "W12-L4 at Crypto.com this season",
+                "pace": 102.3,
+                "offensive_rating": 115.1,
+                "defensive_rating": 113.8,
+                "key_player_averages": {
+                    "LeBron_James": {"pts": 24.5, "ast": 8.1, "reb": 7.5}
+                }
             },
             "away_team_context": {
-                "form": "D-W-L-W-D",
-                "avg_goals": 1.5,
-                "injuries": [],
-                "away_record": "W3-D4-L4 on the road this season",
-                "xG_per_game": 1.3,
+                "form": "W-W-W-W-L",
+                "avg_points_scored": 116.8,
+                "avg_points_allowed": 110.1,
+                "injuries": ["Murray (Out - Rest)"],
+                "away_record": "W9-L7 on the road this season",
+                "pace": 98.5,
+                "offensive_rating": 118.5,
+                "defensive_rating": 110.2,
+                "key_player_averages": {
+                    "Nikola_Jokic": {"pts": 26.2, "ast": 9.5, "reb": 12.1}
+                }
             },
             "odds": {
-                "home_win": 2.50,
-                "draw": 3.25,
-                "away_win": 2.90,
-                "over_2_5": 1.95,
-                "under_2_5": 1.90,
-                "btts_yes": 1.65,
-                "btts_no": 2.25,
+                "home_win_moneyline": 2.05,
+                "away_win_moneyline": 1.76,
+                "home_spread_plus_2_5": 1.90,
+                "away_spread_minus_2_5": 1.90,
+                "over_225_5": 1.90,
+                "under_225_5": 1.90,
+                "LeBron_Over_25_5_pts": 1.85,
+                "Jokic_Over_10_5_ast": 1.70,
             },
             "h2h_context": (
-                "The last 3 meetings between these sides have all ended in draws. "
-                "Both teams scored in 4 of the last 5 encounters."
+                "Denver has won 8 of the last 10 matchups, including playoffs. "
+                "Lakers struggle against Jokic's passing out of double teams."
             ),
             "news_context": (
-                "Bournemouth have a fully fit squad for the first time this "
-                "season. Wolves' Cunha is in red-hot form with 5 goals in 4 games."
+                "Denver is on the second night of a back-to-back (B2B) and resting Jamal Murray. "
+                "Lakers have had 3 days of rest."
             ),
         },
+        # ── Bundle 3: Tennis (Grand Slam Semi-Final) ───────────────────
+        {
+            "sport": "tennis",
+            "match_info": {
+                "player_1": "Sinner",
+                "player_2": "Djokovic",
+                "date": "2026-03-03",
+                "tournament": "Australian Open (Hard Court)",
+                "round": "Semi-Final",
+            },
+            "home_team_context": {
+                "name": "Jannik Sinner",
+                "form_last_5": "W-W-W-W-W",
+                "serve_hold_pct": "91%",
+                "return_break_pct": "28%",
+                "injuries": [],
+                "recent_fatigue": "Won previous round in straight sets (2h 10m).",
+                "hard_court_win_rate": "82%",
+            },
+            "away_team_context": {
+                "name": "Novak Djokovic",
+                "form_last_5": "W-W-W-W-W",
+                "serve_hold_pct": "89%",
+                "return_break_pct": "31%",
+                "injuries": ["Right Wrist (Taped - Minor)"],
+                "recent_fatigue": "Survived a 5-set thriller in QF (4h 15m).",
+                "hard_court_win_rate": "88%",
+            },
+            "odds": {
+                "player_1_win": 1.80,
+                "player_2_win": 2.05,
+                "over_39_5_games": 1.90,
+                "under_39_5_games": 1.90,
+                "player_1_minus_1_5_sets": 2.30,
+            },
+            "h2h_context": (
+                "H2H is tied 3-3. Sinner has won the last two meetings on Hard Courts, "
+                "including their previous clash at this exact tournament last year."
+            ),
+            "news_context": "Djokovic appeared physically exhausted in the QF post-match press conference.",
+            "league_context": None, # Tennis doesn't map perfectly to league_context
+        },
     ]
+
+    return bundles
 
     return bundles

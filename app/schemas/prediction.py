@@ -24,14 +24,15 @@ class PredictionResponse(BaseModel):
     market: str = Field(
         description=(
             "The betting market with the highest value. "
-            "Examples: 'Match Result', 'Over/Under 2.5 Goals', "
-            "'Both Teams to Score', 'Asian Handicap -1.5', 'Double Chance'."
+            "Examples: 'Match Result', 'Moneyline', 'Point Spread -5.5', "
+            "'Player Prop: LeBron Over 25.5 Pts', 'Over/Under 215.5', "
+            "'Set Handicap -1.5'."
         ),
     )
     prediction: str = Field(
         description=(
             "The specific pick within the chosen market. "
-            "Examples: 'Arsenal Win', 'Over 2.5 Goals', 'BTTS - Yes'."
+            "Examples: 'Arsenal Win', 'Lakers -5.5', 'Djokovic 3-0'."
         ),
     )
     reasoning: str = Field(
