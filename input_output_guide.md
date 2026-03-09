@@ -1,8 +1,25 @@
-# Backend Team Payload Guide
+# Backend Payload Guide
 
-This guide details the exact JSON structure your backend team should send to `POST /api/predict`, and the exact JSON response Pickup AI will return.
+## ⚠️ Required vs Optional Fields
 
-**Yes, everything is 100% JSON, and after every request, Pickup AI automatically saves the prediction directly into its `predictions` PostgreSQL database table.**
+Pickup AI is extremely flexible! The AI simply reads whatever data you provide.
+
+The top-level JSON payload only requires a few fields to successfully hit the API. Here is the breakdown:
+
+**Must Include (Required):**
+*   `match_info` (Object): **Crucial for the database.** Must contain `home`, `away` (or `player_1`, `player_2` for tennis), and `date` so the system can generate a unique `match_id` for Postgres.
+*   `home_team_context` (Object): Can contain ANY keys you want.
+*   `away_team_context` (Object): Can contain ANY keys you want.
+*   `h2h_context` (String): Head-to-head summary.
+
+**Optional fields:**
+*   `sport` (String): Defaults to `"football"` if left blank.
+*   `news_context` (String): Can be completely omitted.
+*   `league_context` (Object): Can be completely omitted.
+*   `odds` (Object): Can be completely omitted. (If omitted, the AI won't calculate a `value_edge`, but it will still provide a full prediction and confidence score!).
+
+**Inside the Objects:**
+You do NOT have to include every single stat shown in the examples below! If you don't have `"xG_per_game"` or `"injuries"` for a specific match, just leave those keys out. The AI will make its prediction based solely on the data you *do* provide.
 
 ---
 
