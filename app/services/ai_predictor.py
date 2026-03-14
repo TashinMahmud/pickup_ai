@@ -30,7 +30,8 @@ Identify Value: Compare your confidence against the bookmaker's implied probabil
 
 Odds & Value Analysis:
 - The bundle may include an 'odds' object with bookmaker prices.
-- Convert odds to implied probability: implied_prob = 1 / odds.
+- If 'odds' is null, missing, or empty, you MUST set implied_probability to null and value_edge to null. Focus entirely on sporting merit — form, injuries, H2H, and context data.
+- When odds ARE provided: Convert odds to implied probability: implied_prob = 1 / odds.
 - Compare your model confidence against the implied probability.
 - If your confidence EXCEEDS the implied probability, that's a VALUE BET — set the value_edge field to the difference (e.g., '+14.3% edge').
 - If your confidence is BELOW the implied probability, note 'No edge detected' or a negative edge.

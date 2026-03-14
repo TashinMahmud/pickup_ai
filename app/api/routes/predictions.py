@@ -19,16 +19,24 @@ router = APIRouter(prefix="/api", tags=["predictions"])
 
 
 class MatchBundle(BaseModel):
-    """Request body for the /predict endpoint."""
+    """The inner match data object."""
 
     sport: str = "football"
     match_info: dict
     home_team_context: dict
     away_team_context: dict
-    h2h_context: str
+    h2h_context: Optional[str] = None
     news_context: Optional[str] = None
     league_context: Optional[dict] = None
     odds: Optional[dict] = None
+
+
+class PredictRequest(BaseModel):
+    """Wrapper schema matching the backend team's payload format."""
+
+    success: Optional[bool] = None
+    message: Optional[str] = None
+    data: MatchBundle
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -85,14 +93,16 @@ def _save_prediction(
 
 
 @router.post("/predict", response_model=PredictionResponse)
-async def predict_match(bundle: MatchBundle, db: Session = Depends(get_db)):
+async def predict_match(request: PredictRequest, db: Session = Depends(get_db)):
     """
-    Accept a match bundle, generate an AI prediction, save it to the
-    database, and return the JSON response.
+    Accept a wrapped match bundle, unpack the data, generate an AI
+    prediction, save it to the database, and return the JSON response.
 
     The prediction will automatically appear in the Postgres
     `predictions` table with a unique match_id.
     """
+    bundle = request.data  # Unpack the wrapper
+
     try:
         result = predict(bundle.model_dump())
     except RuntimeError as e:
