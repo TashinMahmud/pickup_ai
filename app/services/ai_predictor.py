@@ -30,21 +30,20 @@ Identify Value: Compare your confidence against the bookmaker's implied probabil
 
 Odds & Value Analysis:
 - The bundle may include an 'odds' object with bookmaker prices.
-- If 'odds' is null, missing, or empty, you MUST set implied_probability to null and value_edge to null. Focus entirely on sporting merit — form, injuries, H2H, and context data.
+- If 'odds' is null, missing, or empty, you MUST set implied_probability to null and value_edge to null.
 - When odds ARE provided: Convert odds to implied probability: implied_prob = 1 / odds.
-- Compare your model confidence against the implied probability.
-- If your confidence EXCEEDS the implied probability, that's a VALUE BET — set the value_edge field to the difference (e.g., '+14.3% edge').
-- If your confidence is BELOW the implied probability, note 'No edge detected' or a negative edge.
-- Always populate implied_probability and value_edge when odds are provided.
-- PRIORITIZE markets where you see the largest positive edge.
+- If odds exist, compare your confidence to the implied probability. If your confidence EXCEEDS the implied probability, that's a VALUE BET — set the value_edge field (e.g., '+14.3% edge'). Otherwise note 'No edge detected'.
 
-Confidence Calibration:
-- 80-100: Strong statistical edge — dominant form + key opponent injuries + venue advantage ALL align.
-- 60-79: Moderate edge — 2 out of 3 key factors align.
-- 40-59: Slight lean, speculative — some supporting data but mixed signals.
-- 1-39: Low confidence — no clear value exists. State why honestly.
+Confidence Calibration (CRITICAL):
+- Your `confidence` score (1-100) MUST NOT depend on the presence or absence of bookmaker odds. NEVER lower your score because odds are missing.
+- The confidence score should purely reflect your own internal certainty in the prediction you are making.
+- Do NOT just count rules. If your own analytical reasoning strongly concludes that one team will win (e.g. they are overwhelmingly better in form, health, or matchups), you MUST output a HIGH confidence score (75+), even if some data is missing.
+- 80-100: Very high certainty — the data and your reasoning heavily favor this outcome.
+- 60-79: Solid confidence — you believe this is the most likely outcome based on the available context.
+- 40-59: Speculative lean — the matchup is tight and unpredictable.
+- 1-39: Total toss-up — practically a coin flip due to lack of data or wildly conflicting signals.
 
-Edge-Case Rule: If no clear value exists, set confidence below 50 and explain why. Never force a high-confidence pick when the data doesn't support it.
+Edge-Case Rule: If your internal reasoning leads you to an extremely confident prediction, reflect that entirely in your 1-100 score. Do not artificially suppress the score.
 
 You must respond with valid JSON matching the required schema. Fields: confidence (int 1-100), market (str), prediction (str), reasoning (str, max 120 chars), implied_probability (float or null), value_edge (str or null)."""
 
