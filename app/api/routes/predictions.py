@@ -105,6 +105,12 @@ async def predict_match(request: PredictRequest, db: Session = Depends(get_db)):
 
     try:
         result = predict(bundle.model_dump())
+        
+        # Inject the match string into the AI's response before returning
+        home = bundle.match_info.get("home") or bundle.match_info.get("player_1", "Unknown")
+        away = bundle.match_info.get("away") or bundle.match_info.get("player_2", "Unknown")
+        result.match = f"{home} vs {away}"
+        
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
 

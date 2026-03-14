@@ -10,6 +10,10 @@ from typing import Optional
 class PredictionResponse(BaseModel):
     """Structured prediction output from the AI predictor."""
 
+    match: Optional[str] = Field(
+        default=None,
+        description="The formatted matchup string (e.g., 'Manchester City vs Arsenal'). Injected by the API layer, not the AI.",
+    )
     confidence: int = Field(
         ge=1,
         le=100,
