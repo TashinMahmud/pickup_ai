@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Environment (use docker-compose env or mount)
+.env
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+dist/
+build/
+.eggs/
+*.egg
+
+# IDE
+.vscode
+.idea
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docs (optional, exclude to keep image small)
+*.md
+!README.md
+
+# Tests
+tests/
+*.pytest_cache
+.coverage
+htmlcov/
