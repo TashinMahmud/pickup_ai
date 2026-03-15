@@ -1,6 +1,6 @@
 # Pickup AI
 
-An AI-powered sports betting prediction engine using an LLM to generate high-value betting predictions.
+An AI-powered sports betting prediction Engine using an LLM to generate high-value betting predictions.
 
 ## Setup
 
